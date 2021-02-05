@@ -55,7 +55,11 @@ def build_answer(
     payload = b"".join(queries)
 
     if answer:
-        payload += b"\xc0\x0c\x00\x01\x00\x01\x00\x00\x00\x70\x00\x04" + answer
+        payload += (
+            b"\xc0\x0c"
+            + struct.pack(">1H1H1L1H", 1, 1, ttl, 4)  # IN  # A  # TTL  # payload length
+            + answer
+        )
     return header + payload
 
 
