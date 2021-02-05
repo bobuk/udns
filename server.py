@@ -5,16 +5,16 @@ import socket
 import ipaddress
 from os import environ as env
 from collections import deque
-from typing import Optional, List, Tuple
+from typing import Optional, Tuple
 from dnslib import *
 from redis import RedisPool
 
-NO_UVLOOP = env.get("NO_UVLOOP", 0)
-
-if NO_UVLOOP:
+try:
     import uvloop  # type: ignore
 
     uvloop.install()
+except:
+    pass
 
 DB = RedisPool(env.get("REDIS", "127.0.0.1"), db=int(env.get("REDIS_DB", 0)))
 DNS_RELAY = (env.get("DNS_RELAY", get_default_resolver()), 53)
