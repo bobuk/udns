@@ -1,0 +1,24 @@
+#+TITLE: μDNS is oversimpistic dns server with direct answers from Redis
+
+Main purpose for this solution is to have very fast-rewritable DNS names with virtually no caching.
+Typical usecase: fine-graining requests sharding in microservice's requests with complex rules. For example I use it to route requests from one microserver to hundred of anothers with sharding by user's ID without single API Gateway and flooding of Consul or CoreDNS. Just prefill redis with pairs like `user1923923923: 192.168.3.31` and so on.
+
+μDNS have no dependencies except of standard library and shows 10k+ RPS on single core of my macbook pro (more than 40k rps on modern production server). You can increase rps rate by installing uvloop but it's normally there's no need for that.
+
+* Query's working cycle
+When μDNS get a new request it will be processed with this steps:
+1. check if exact this fqdn is avaliable in Redis database. If record is found it immediately returned as DNS answer.
+2. If DNS request contain `.` symbol (i.e. looks like a full domain request) it will forward to real nameserver and answer is forwarded back
+3. in any other case - NXDOMAIN (no name found) is the answer
+
+* Usage
+Just start it with python3
+#+begin_src shell
+python3 server.py
+#+end_src
+* Configuration
+Configuration is available trough environment variables.
+- *REDIS*: host of redis database /default: 127.0.0.1/
+- *REDIS_DB*: database number on redis server /default: 0/
+- *DNS_RELAY*: address of live dns server who will serve real dns requests if no record in Redis available /default: reading nameserver from /etc/resolv.conf/
+- *BIND*: ip address to bind dns server for /default: 0.0.0.0/
