@@ -67,7 +67,10 @@ def get_default_resolver(resolv_conf: str = "/etc/resolv.conf") -> str:
     rc = pathlib.Path(resolv_conf)
     if rc.is_file():
         with rc.open() as file:
-            while line := file.readline():
+            while True:
+                line = file.readline()
+                if not line:
+                    break
                 parsed = line.strip().split("#", 1)[0].split()
                 if len(parsed) == 2 and parsed[0] == "nameserver":
                     return parsed[1]
