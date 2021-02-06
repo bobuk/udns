@@ -52,7 +52,7 @@ class RedisPool:
         self.host = host
         self.port = port
         self.db = db
-        self.size = pool_size
+        self.size = pool_size - 1
         self.queue: deque = deque()
         self.sem = asyncio.Semaphore(self.size)
         for i in range(self.size):
@@ -61,8 +61,10 @@ class RedisPool:
     async def execute(self, cmd: str) -> Optional[str]:
         async with self.sem:
             conn = self.queue.popleft()
-            res = await conn.execute(cmd)
-            self.queue.append(conn)
+            try:
+                res = await conn.execute(cmd)
+            finally:
+                self.queue.append(conn)
             return res.decode() if res else None
 
     async def get(self, key: str) -> Optional[str]:
